@@ -155,7 +155,6 @@ def fetch_simulation_data(conn, simulation_id):
         logger.error(f"Error fetching simulation data: {e}")
         raise
 
-
 def is_connection_alive(conn):
     """Check if Oracle connection is still alive."""
     try:
@@ -273,7 +272,6 @@ def generate_oracle_insert_statements(json_data, table_name):
 
     return insert_statements
 
-
 # Function to convert DataFrame row to dictionary, handling nulls and data types
 def row_to_dict(row):
     row_dict = row.to_dict()
@@ -286,17 +284,11 @@ def row_to_dict(row):
             row_dict[key] = int(value)
     return row_dict
 
-
-
-
-
-
 # Function to generate the INSERT SQL statement dynamically
 def generate_insert_sql(table, columns):
     columns_str = ", ".join(columns)
     placeholders = ", ".join([":" + str(i + 1) for i in range(len(columns))])
     return f"INSERT INTO {table} ({columns_str}) VALUES ({placeholders})"
-
 
 # def insert_data_to_db(df, conn, simulation_id):
 #     """
@@ -394,7 +386,6 @@ def insert_data_to_db(df, conn, sim_id):
     table_name = "AG_PP_OPTIMIZED_OUTPUT"
     # batch_size = 1000
 
-
     logger.info(str(f"shape of the df ------------> {df.shape} "))
     data = [row_to_dict(row) for _, row in df.iterrows()]
     logger.info(str(f"Converted DataFrame to list of {len(data)} dictionaries"))
@@ -419,8 +410,6 @@ def insert_data_to_db(df, conn, sim_id):
         conn.rollback()  # Roll back the last uncommitted transaction
         logger.info(str(f"Error executing query:\n{query}\n\nException: {e}"))
         return f"Failed due to: {str(e)}"
-
-
 
 # ============================================================================
 # HELPER FUNCTION FOR WEEK BOUNDARIES
@@ -465,12 +454,9 @@ def _week_bounds_from_weekly_bucket(bucket_str):
     
     return week_sunday, week_saturday
 
-
 # ============================================================================
 # RESOURCE AVAILABILITY CALCULATION
 # ============================================================================
-
-
 
 def calculate_resource_availability(df_resource_availability, df_downtime, df_CIP_DOWNTIME):
     """
@@ -637,7 +623,6 @@ def calculate_resource_availability(df_resource_availability, df_downtime, df_CI
         df_weekly = df_weekly.sort_values(['ORGANIZATION_CODE', 'RESOURCE_CODE', 'WEEK_START_DATE'])
         
         return df, df_weekly
-    
     
     def add_weekly_unavailability_aggregation(df_unavailability):
         if df_unavailability.empty:
@@ -813,8 +798,6 @@ def calculate_resource_availability(df_resource_availability, df_downtime, df_CI
         df_split = df_split.sort_values(['ORGANIZATION_CODE', 'RESOURCE_CODE', 'WEEK_START_DATE', 'FROM_DATETIME_IN_WEEK'])
         return df_split
 
-
-    
     def calculate_cip_downtime(df_cip_downtime):
         if df_cip_downtime.empty:
             df_empty = df_cip_downtime.copy()
@@ -824,7 +807,6 @@ def calculate_resource_availability(df_resource_availability, df_downtime, df_CI
         
         df = df_cip_downtime.copy()
         return df
-    
     
     def calculate_weekly_availability(df_weekly_availability, df_weekly_unavailability, 
                                        df_downtime_split, df_CIP_DOWNTIME):
@@ -957,7 +939,6 @@ def calculate_resource_availability(df_resource_availability, df_downtime, df_CI
     logger.info("Updated availability applied: current week includes past days + prorated current + future full")
     # === END OF UPDATED LOGIC ===
 
-
     df_unavailability = find_unavailability_gaps(df_resource_availability)
     logger.info(f"Found {len(df_unavailability)} unavailability gaps")
     
@@ -1000,11 +981,6 @@ def calculate_resource_availability(df_resource_availability, df_downtime, df_CI
     df_result._cip_downtime = df_cip_processed
     
     return df_result
-
-
-
-
-
 
 # ============================================================================
 # WEEK NUMBER FUNCTIONS
@@ -1063,7 +1039,6 @@ def add_week_num(df, date_column='START_DATETIME', week_column_name='WEEK_NUM'):
     
     return df_result
 
-
 # ============================================================================
 # RUN RULE AND FLAG FUNCTIONS
 # ============================================================================
@@ -1099,7 +1074,6 @@ def add_run_rule_flag(df_input, df_run_rules):
     logger.info(f"Run rule flag added: {(df_input_copy['RUN_RULE_FLAG'] == 'Y').sum()} matches found")
     return df_input_copy
 
-
 def add_expiry_flag(df):
     """
     Adds an EXPIRY_FLAG column to the DataFrame based on the presence of valid dates in EXPIRY_DATE.
@@ -1115,7 +1089,6 @@ def add_expiry_flag(df):
 
     logger.info(f"Expiry flag added: {(df_copy['EXPIRY_FLAG'] == 'Y').sum()} items with expiry dates")
     return df_copy
-
 
 def sort_input_by_priority(df):
     """
@@ -1287,7 +1260,6 @@ def fix_invalid_week_num(output_df):
     
     return output_df, fix_summary
 
-
 def validate_week_num_format(output_df):
     """
     Validate that all WEEK_NUM values are in correct 'WW-YYYY' format.
@@ -1377,21 +1349,6 @@ def assign_weekly_bucket(output_df, df_run_rules, df_resource_availability, df_c
     
     logger.info("Starting weekly bucket assignment")
     
-    ## 08-12 START ADDITION    
-    # ===== ADD THIS SECTION AT THE START =====
-    # Fix invalid WEEK_NUM values before processing
-    # logger.info("Checking for invalid WEEK_NUM values...")
-    # output_df, fix_summary = fix_invalid_week_num(output_df)
-    
-    # Validate all WEEK_NUM are now correct
-    # is_valid, invalid_entries = validate_week_num_format(output_df)
-    # if not is_valid:
-    #     logger.error(f"Still have {len(invalid_entries)} invalid WEEK_NUM entries after fix attempt:")
-    #     for entry in invalid_entries[:10]:  # Show first 10
-    #         logger.error(f"  Index {entry['index']}: {entry['week_num']} - {entry['reason']}")
-
-    ## 08-12 END ADDITION
-
     output_df['WEEKLY_BUCKET'] = None
     weekly_usage = {}
     schedule = {}
